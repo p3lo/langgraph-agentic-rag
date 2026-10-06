@@ -70,7 +70,6 @@ workflow.set_conditional_entry_point(
         RETRIEVE: RETRIEVE,
     },
 )
-workflow.set_entry_point(RETRIEVE)
 workflow.add_edge(RETRIEVE, GRADE_DOCUMENTS)
 workflow.add_conditional_edges(
     GRADE_DOCUMENTS,
@@ -91,7 +90,6 @@ workflow.add_conditional_edges(
     },
 )
 workflow.add_edge(WEBSEARCH, GENERATE)
-workflow.add_edge(GENERATE, END)
 
 app = workflow.compile()
 
