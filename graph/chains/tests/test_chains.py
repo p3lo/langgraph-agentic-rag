@@ -3,6 +3,8 @@ from pprint import pprint
 load_dotenv()
 
 from graph.chains.retrieval_grader import retrieval_grader, GradeDocuments
+from graph.chains.hallucination_grader import hallucination_grader, GradeHallucinations
+from graph.chains.answer_grader import answer_grader, GradeAnswer
 from graph.chains.generation import generation_chain
 from ingestion import retriever
 
@@ -29,3 +31,39 @@ def test_generation_chain() -> None:
     
     generation = generation_chain.invoke({"question": question, "context": docs})
     pprint(generation)
+
+def test_hallucination_grader_answer_yes() -> None:
+    question = "agent memory"
+    docs = retriever.invoke(question)
+    
+    generation = generation_chain.invoke({"question": question, "context": docs})
+    
+    res: GradeHallucinations = hallucination_grader.invoke({"documents": docs, "generation": generation})
+    assert res.binary_score
+
+def test_hallucination_grader_answer_no() -> None:
+    question = "agent memory"
+    docs = retriever.invoke(question)
+    
+    generation = "The capital of France is Paris."
+    
+    res: GradeHallucinations = hallucination_grader.invoke({"documents": docs, "generation": generation})
+    assert not res.binary_score
+
+def test_answer_grader_answer_yes() -> None:
+    question = "agent memory"
+    docs = retriever.invoke(question)
+    
+    generation = generation_chain.invoke({"question": question, "context": docs})
+    
+    res: GradeAnswer = answer_grader.invoke({"question": question, "generation": generation})
+    assert res.binary_score
+
+def test_answer_grader_answer_no() -> None:
+    question = "agent memory"
+    docs = retriever.invoke(question)
+    
+    generation = "The capital of France is Paris."
+    
+    res: GradeAnswer = answer_grader.invoke({"question": question, "generation": generation})
+    assert not res.binary_score
