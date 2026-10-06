@@ -1,0 +1,31 @@
+from dotenv import load_dotenv
+from pprint import pprint
+load_dotenv()
+
+from graph.chains.retrieval_grader import retrieval_grader, GradeDocuments
+from graph.chains.generation import generation_chain
+from ingestion import retriever
+
+
+def test_retrieval_grader_yes_answer() -> None:
+    question = "agent memory"
+    docs = retriever.invoke(question)
+    doc_txt = docs[1].page_content
+    
+    res: GradeDocuments = retrieval_grader.invoke({"question": question, "document": doc_txt})
+    assert res.binary_score == "yes"
+
+def test_retrieval_grader_no_answer() -> None:
+    question = "agent memory"
+    docs = retriever.invoke(question)
+    doc_txt = docs[1].page_content
+    
+    res: GradeDocuments = retrieval_grader.invoke({"question": "What is the capital of France?", "document": doc_txt})
+    assert res.binary_score == "no"
+
+def test_generation_chain() -> None:
+    question = "agent memory"
+    docs = retriever.invoke(question)
+    
+    generation = generation_chain.invoke({"question": question, "context": docs})
+    pprint(generation)
