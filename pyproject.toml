@@ -17,6 +17,7 @@ dependencies = [
     "langchain-openrouter>=0.2.9",
     "langchain-tavily>=0.2.18",
     "langchain-text-splitters>=1.1.3",
+    "langchain-typesafe>=0.0.1a3",
     "langchain-unstructured>=1.0.1",
     "langchainhub>=0.1.21",
     "langgraph>=1.2.13",

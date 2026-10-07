@@ -5,6 +5,7 @@ import os
 
 from graph.chains.retrieval_grader import retrieval_grader
 from graph.state import GraphState
+from langchain_typesafe import Noul, TypeSafeClassifier
 
 
 def grade_documents(state: GraphState) -> Dict[str, Any]:
@@ -26,31 +27,43 @@ def grade_documents(state: GraphState) -> Dict[str, Any]:
     filtered_docs = []
     web_search = False
     for d in documents:
-        response_with_jev = requests.post(
-            url="https://openrouter.ai/api/alpha/decisions",
-            headers={
-                "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": "http://agentic-rag",
-                "X-OpenRouter-Title": "Agentic RAG"
-            },
-            data=json.dumps({
-                "model": "openai/gpt-6-luna-decisions",
-                "state": question,
-                "questions": {
-                    "is_relevant": {
-                        "type": "noul",
-                        "instructions": f"Determine whether the following document: '{d.page_content}' is relevant to the question",
-                        "criteria": {
-                            "true": "The document is relevant to the question",
-                            "false": "The document is not relevant to the question"
-                        }
-                    }
-                }
-            })
+        classifier = TypeSafeClassifier(
+            base_url="https://openrouter.ai/api",
+            model="openai/gpt-6-luna-decisions",
+            api_key=os.getenv("OPENROUTER_API_KEY")
         )
-        answers = response_with_jev.json()["answers"]
-        print(f"Answer by JEV: {answers["is_relevant"]["noul"]}")
+        QUESTIONS = {
+            "is_relevant": Noul(instructions=f"Determine whether the following document: '{d.page_content}' is relevant to the question")
+        }
+        res = classifier.invoke({"state": question, "questions": QUESTIONS})
+        relevant_score = res.nouls["is_relevant"].noul
+        print(f"Answer by TypeSafeClassifier: {relevant_score}")
+        
+        # response_with_jev = requests.post(
+        #     url="https://openrouter.ai/api/alpha/decisions",
+        #     headers={
+        #         "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
+        #         "Content-Type": "application/json",
+        #         "HTTP-Referer": "http://agentic-rag",
+        #         "X-OpenRouter-Title": "Agentic RAG"
+        #     },
+        #     data=json.dumps({
+        #         "model": "openai/gpt-6-luna-decisions",
+        #         "state": question,
+        #         "questions": {
+        #             "is_relevant": {
+        #                 "type": "noul",
+        #                 "instructions": f"Determine whether the following document: '{d.page_content}' is relevant to the question",
+        #                 "criteria": {
+        #                     "true": "The document is relevant to the question",
+        #                     "false": "The document is not relevant to the question"
+        #                 }
+        #             }
+        #         }
+        #     })
+        # )
+        # answers = response_with_jev.json()["answers"]
+        # print(f"Answer by JEV: {answers["is_relevant"]["noul"]}")
         score = retrieval_grader.invoke({"question": question, "document": d.page_content})
         if score.binary_score == "yes":
             print("---GRADE: DOCUMENT RELEVANT---")
