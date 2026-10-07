@@ -22,6 +22,7 @@ dependencies = [
     "langgraph>=1.2.13",
     "pytest>=9.1.1",
     "python-dotenv>=1.2.4",
+    "requests>=2.34.2",
     "tavily-python>=0.8.4",
     "tiktoken>=0.14.0",
     "unstructured>=0.27.16",
