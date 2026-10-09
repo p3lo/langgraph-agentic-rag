@@ -1,16 +1,18 @@
 from typing import Literal
 
+from langchain.chat_models import init_chat_model
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
-from langchain.chat_models import init_chat_model
+
 
 class RouteQuery(BaseModel):
     """Route a user query to the most relevant datasource."""
-    
+
     datasource: Literal["vectorstore", "web_search"] = Field(
         ...,
         description="Given a user question, route it to web search or a vectorstore.",
     )
+
 
 llm = init_chat_model(
     "deepseek/deepseek-v4.1-flash", temperature=0, model_provider="openrouter"

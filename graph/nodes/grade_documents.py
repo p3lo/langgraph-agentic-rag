@@ -1,11 +1,12 @@
-from typing import Any, Dict
-import requests
 import json
 import os
+from typing import Any, Dict
+
+import requests
+from langchain_typesafe import Noul, TypeSafeClassifier
 
 from graph.chains.retrieval_grader import retrieval_grader
 from graph.state import GraphState
-from langchain_typesafe import Noul, TypeSafeClassifier
 
 
 def grade_documents(state: GraphState) -> Dict[str, Any]:
@@ -23,22 +24,24 @@ def grade_documents(state: GraphState) -> Dict[str, Any]:
     print("---CHECK DOCUMENT RELEVANCE TO QUESTION---")
     question = state["question"]
     documents = state["documents"]
-    
+
     filtered_docs = []
     web_search = False
     for d in documents:
         classifier = TypeSafeClassifier(
             base_url="https://openrouter.ai/api",
             model="openai/gpt-6-luna-decisions",
-            api_key=os.getenv("OPENROUTER_API_KEY")
+            api_key=os.getenv("OPENROUTER_API_KEY"),
         )
         QUESTIONS = {
-            "is_relevant": Noul(instructions=f"Determine whether the following document: '{d.page_content}' is relevant to the question")
+            "is_relevant": Noul(
+                instructions=f"Determine whether the following document: '{d.page_content}' is relevant to the question"
+            )
         }
         res = classifier.invoke({"state": question, "questions": QUESTIONS})
         relevant_score = res.nouls["is_relevant"].noul
         print(f"Answer by TypeSafeClassifier: {relevant_score}")
-        
+
         # response_with_jev = requests.post(
         #     url="https://openrouter.ai/api/alpha/decisions",
         #     headers={
@@ -64,7 +67,9 @@ def grade_documents(state: GraphState) -> Dict[str, Any]:
         # )
         # answers = response_with_jev.json()["answers"]
         # print(f"Answer by JEV: {answers["is_relevant"]["noul"]}")
-        score = retrieval_grader.invoke({"question": question, "document": d.page_content})
+        score = retrieval_grader.invoke(
+            {"question": question, "document": d.page_content}
+        )
         if score.binary_score == "yes":
             print("---GRADE: DOCUMENT RELEVANT---")
             filtered_docs.append(d)
@@ -72,5 +77,5 @@ def grade_documents(state: GraphState) -> Dict[str, Any]:
             print("---GRADE: DOCUMENT NOT RELEVANT---")
             web_search = True
             continue
-    
+
     return {"documents": filtered_docs, "question": question, "web_search": web_search}

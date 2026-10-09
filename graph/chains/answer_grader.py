@@ -1,12 +1,15 @@
+from langchain.chat_models import init_chat_model
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
-from langchain.chat_models import init_chat_model
+
 
 class GradeAnswer(BaseModel):
     """Binary score to assess answer relevance to question."""
+
     binary_score: bool = Field(
         description="Answer is relevant to the question, 'yes' or 'no'"
     )
+
 
 llm = init_chat_model(
     "deepseek/deepseek-v4.1-flash", temperature=0, model_provider="openrouter"

@@ -1,10 +1,11 @@
+from langchain.chat_models import init_chat_model
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
-from langchain.chat_models import init_chat_model
 
 llm = init_chat_model(
     "deepseek/deepseek-v4.1-flash", temperature=0, model_provider="openrouter"
 )
+
 
 class GradeHallucinations(BaseModel):
     """Binary score for hallucination present in generation answer."""

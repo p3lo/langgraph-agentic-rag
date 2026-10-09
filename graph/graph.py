@@ -2,14 +2,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 
-from graph.consts import RETRIEVE, GENERATE, GRADE_DOCUMENTS, WEBSEARCH
-from graph.state import GraphState
-from graph.nodes import retrieve, generate, grade_documents, web_search
 from graph.chains.answer_grader import answer_grader
 from graph.chains.hallucination_grader import hallucination_grader
-from graph.chains.router import question_router, RouteQuery
+from graph.chains.router import RouteQuery, question_router
+from graph.consts import GENERATE, GRADE_DOCUMENTS, RETRIEVE, WEBSEARCH
+from graph.nodes import generate, grade_documents, retrieve, web_search
+from graph.state import GraphState
+
 
 def decide_to_generate(state):
     print("---DECIDE TO GENERATE---")
@@ -20,6 +21,7 @@ def decide_to_generate(state):
     else:
         print("---DECISION: Generate---")
         return GENERATE
+
 
 def grade_generation_grounded_in_documents_and_question(state: GraphState) -> str:
     print("---CHECK HALLUCINATIONS---")
@@ -45,6 +47,7 @@ def grade_generation_grounded_in_documents_and_question(state: GraphState) -> st
         print("---DECISION: GENERATION IS NOT GROUNDED IN DOCUMENTS, RE-TRY---")
         return "not supported"
 
+
 def route_question(state: GraphState) -> str:
     print("---ROUTE QUESTION---")
     question = state["question"]
@@ -55,6 +58,7 @@ def route_question(state: GraphState) -> str:
     elif source.datasource == "vectorstore":
         print("---ROUTE QUESTION TO RAG---")
         return RETRIEVE
+
 
 workflow = StateGraph(GraphState)
 
